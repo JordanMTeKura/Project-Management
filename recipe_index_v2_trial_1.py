@@ -114,12 +114,12 @@ uncheck_allergens = QPushButton("Uncheck All")
 # Meats
 meats_widget = QWidget()
 meats_vbox = QVBoxLayout()
-meats_filter_label = QLabel("Meat content\n(Tick to exclude)")
+meats_filter_label = QLabel("Meat content")
 beef_checkbox = QCheckBox("Beef")
 pork_checkbox = QCheckBox("Pork")
 lamb_checkbox = QCheckBox("Lamb")
 poultry_checkbox = QCheckBox("Poultry")
-uncheck_meats = QPushButton("Uncheck All")
+no_meats = QCheckBox("None")
 # Add/Edit/Remove Buttons
 aer_widget = QWidget()
 aer_box = QHBoxLayout()
@@ -189,7 +189,7 @@ meats_vbox.addWidget(beef_checkbox)
 meats_vbox.addWidget(pork_checkbox)
 meats_vbox.addWidget(lamb_checkbox)
 meats_vbox.addWidget(poultry_checkbox)
-meats_vbox.addWidget(uncheck_meats)
+meats_vbox.addWidget(no_meats)
 meats_vbox.addStretch()
 
 # Add/Edit/Remove Buttons part
@@ -264,6 +264,9 @@ def meat_checked(this_checkbox, meat):
         active_meats.append(meat)
     elif this_checkbox.isChecked() is False:
         active_meats.remove(meat)
+    no_meats.setCheckState(QtCore.Qt.CheckState.Unchecked)
+    if "None" in active_meats:
+        active_meats.remove("None")
 
     recipe_filter()
 
@@ -278,9 +281,17 @@ def recipe_filter():
                 for item_3 in template._allergens:
                     if item_2 == item_3:
                         active = False
-            for item_2 in item._meats:
-                for item_3 in template._meats:
-                    if item_2 == item_3:
+            if len(active_meats) >= 1:
+                if active_meats[0] == "None":
+                    if len(item._meats) >= 1:
+                        active = False
+                else:
+                    meat_clear = False
+                    for item_2 in item._meats:
+                        for item_3 in template._meats:
+                            if item_2 == item_3:
+                                meat_clear = True
+                    if meat_clear is False:
                         active = False
             if active is False:
                 active_recipe_list.remove(item)
@@ -299,10 +310,16 @@ def recipe_filter():
                     for item_3 in template._allergens:
                         if item_2 == item_3:
                             allergen_clear = False
-                for item_2 in item._meats:
-                    for item_3 in template._meats:
-                        if item_2 == item_3:
+                if len(active_meats) >= 1:
+                    if active_meats[0] == "None":
+                        if len(item._meats) >= 1:
                             meat_clear = False
+                    else:
+                        meat_clear = False
+                        for item_2 in item._meats:
+                            for item_3 in template._meats:
+                                if item_2 == item_3:
+                                    meat_clear = True
                 if course_clear is True and allergen_clear is True and meat_clear is True:
                     active_recipe_list.append(item)
 
@@ -314,9 +331,17 @@ def recipe_filter():
                 for item_3 in template._allergens:
                     if item_2 == item_3:
                         active = False
-            for item_2 in item._meats:
-                for item_3 in template._meats:
-                    if item_2 == item_3:
+            if len(active_meats) >= 1:
+                if active_meats[0] == "None":
+                    if len(item._meats) >= 1:
+                        active = False
+                else:
+                    meat_clear = False
+                    for item_2 in item._meats:
+                        for item_3 in template._meats:
+                            if item_2 == item_3:
+                                meat_clear = True
+                    if meat_clear is False:
                         active = False
             if active is False:
                 active_recipe_list.remove(item)
@@ -332,17 +357,28 @@ def recipe_filter():
                     for item_3 in template._allergens:
                         if item_2 == item_3:
                             allergen_clear = False
-                for item_2 in item._meats:
-                    for item_3 in template._meats:
-                        if item_2 == item_3:
+                if len(active_meats) >= 1:
+                    if active_meats[0] == "None":
+                        if len(item._meats) >= 1:
                             meat_clear = False
+                    else:
+                        meat_clear = False
+                        for item_2 in item._meats:
+                            for item_3 in template._meats:
+                                if item_2 == item_3:
+                                    meat_clear = True
                 if allergen_clear is True and meat_clear is True:
                     active_recipe_list.append(item)
     showhide()
 
-def uncheck_checkboxes(box_list):
+def uncheck_checkboxes(box_list, meat_check):
     for item in box_list:
         item.setCheckState(QtCore.Qt.CheckState.Unchecked)
+    if meat_check is True:
+        active_meats.clear()
+        if no_meats.checkState() == QtCore.Qt.CheckState.Checked:
+            active_meats.append("None")
+    recipe_filter()
 
 # Recipe List (Temporary)
 spag_bol = recipe("Spaghetti Bolognese", 2, ["Dairy", "Wheat"], ["Beef"], "Lorem Ipsum Dolor Sit Amet" )
@@ -368,12 +404,12 @@ seafood_checkbox.stateChanged.connect(lambda:allergen_checked(seafood_checkbox, 
 egg_checkbox.stateChanged.connect(lambda:allergen_checked(egg_checkbox, "Egg"))
 soy_checkbox.stateChanged.connect(lambda:allergen_checked(soy_checkbox, "Soy"))
 sesame_checkbox.stateChanged.connect(lambda:allergen_checked(sesame_checkbox, "Sesame"))
-uncheck_allergens.clicked.connect(lambda:uncheck_checkboxes([dairy_checkbox, nuts_checkbox, peanuts_checkbox, wheat_checkbox, shellfish_checkbox, seafood_checkbox, egg_checkbox, soy_checkbox, sesame_checkbox]))
-beef_checkbox.stateChanged.connect(lambda:meat_checked(beef_checkbox, "Beef"))
-pork_checkbox.stateChanged.connect(lambda:meat_checked(pork_checkbox, "Pork"))
-lamb_checkbox.stateChanged.connect(lambda:meat_checked(lamb_checkbox, "Lamb"))
-poultry_checkbox.stateChanged.connect(lambda:meat_checked(poultry_checkbox, "Poultry"))
-uncheck_meats.clicked.connect(lambda:uncheck_checkboxes([beef_checkbox, pork_checkbox, lamb_checkbox, poultry_checkbox]))
+uncheck_allergens.clicked.connect(lambda:uncheck_checkboxes([dairy_checkbox, nuts_checkbox, peanuts_checkbox, wheat_checkbox, shellfish_checkbox, seafood_checkbox, egg_checkbox, soy_checkbox, sesame_checkbox], False))
+beef_checkbox.clicked.connect(lambda:meat_checked(beef_checkbox, "Beef"))
+pork_checkbox.clicked.connect(lambda:meat_checked(pork_checkbox, "Pork"))
+lamb_checkbox.clicked.connect(lambda:meat_checked(lamb_checkbox, "Lamb"))
+poultry_checkbox.clicked.connect(lambda:meat_checked(poultry_checkbox, "Poultry"))
+no_meats.clicked.connect(lambda:uncheck_checkboxes([beef_checkbox, pork_checkbox, lamb_checkbox, poultry_checkbox], True))
 
 # App Execution
 recipe_box_updater()
